@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 
 @app.route('/')
-def welcome:
+def welcome():
     return "Welcome to Python API"
 
 
