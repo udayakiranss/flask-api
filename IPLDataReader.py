@@ -1,7 +1,7 @@
 import pandas as pd
 import os as os
 import numpy as np
-from com.iplstats.data.IPLData import Match
+from IPLData import Match
 # colNames = ['id', 'season', 'city', 'date', 'team1', 'team2', 'toss_winner', 'toss_decision', 'result', 'dl_applied',
 #             'winner',
 #             'win_by_runs', 'win_by_wickets', 'player_of_match', 'venue', 'umpire1', 'umpire2', 'umpire3']
