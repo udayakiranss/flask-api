@@ -94,7 +94,7 @@ def between_team_stats(team1, team2):
 
 
 def team_stats(stat_team, season, is_chasing):
-
+    winning_chasing_matches = None
     if season is not None:
         shortlisted_matches = season_group_by.get_group(int(season))
     else:
