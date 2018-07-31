@@ -26,7 +26,7 @@ def ipl_winner(season):
 
 @app.route('/iplstats/team/<stat_team>')
 def team_statistics(stat_team):
-    total_matches, winning_matches = team_stats(stat_team, None, None)
+    total_matches, winning_matches, chasing_matches = team_stats(stat_team, None, None)
     return "%s won %s matches out of %s matches in IPL" \
            % (stat_team, winning_matches, total_matches)
 
