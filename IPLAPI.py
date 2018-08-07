@@ -39,7 +39,9 @@ def ipl_loser(season):
 @app.route('/iplstats/season/<int:season>')
 def ipl_seasonstat(season):
     seasonstr = get_season_stats(season)
-    return json.dumps(seasonstr)
+    js = json.dumps(seasonstr)
+    resp = Response(js, status=200, mimetype='application/json')
+    return resp
 
 
 @app.route('/iplstats/team/<stat_team>')
