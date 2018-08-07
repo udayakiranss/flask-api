@@ -1,7 +1,8 @@
 import pandas as pd
 import os as os
 import numpy as np
-from IPLData import Match
+from IPLData import Match, SeasonStatistics, Player
+
 # colNames = ['id', 'season', 'city', 'date', 'team1', 'team2', 'toss_winner', 'toss_decision', 'result', 'dl_applied',
 #             'winner',
 #             'win_by_runs', 'win_by_wickets', 'player_of_match', 'venue', 'umpire1', 'umpire2', 'umpire3']
@@ -26,6 +27,44 @@ def get_winner(season):
     return season_group_by.get_group(season).tail(1).iloc[0, 1:15]
 
 
+def get_loser(season):
+    return season_group_by.get_group(season).tail(1).iloc[0, 1:15]
+
+
+def get_season_stats(season):
+    shortlisted_matches = season_group_by.get_group(int(season))
+    match_details = shortlisted_matches.tail(1).iloc[0, 1:15]
+    winner = match_details['winner']
+    if winner == match_details['team1']:
+        loser = match_details['team2']
+    else:
+        loser = match_details['team1']
+
+    manOfMatch = match_details['player_of_match']
+    win_by_runs = match_details['win_by_runs']
+    win_by_wickets = match_details['win_by_wickets']
+
+    season_stat = SeasonStatistics()
+    season_stat.season = int(season)
+    season_stat.winner = winner
+    season_stat.loser = loser
+    season_stat.mom = manOfMatch
+    season_stat.by_runs = int(win_by_runs)
+    season_stat.by_wickets = int(win_by_wickets)
+
+    mom_wickets = get_bowler_wickets_match(manOfMatch,season,match_details['id'])
+    mom_runs = get_batsman_runs_match(manOfMatch, season, match_details['id'])
+
+    mom_player = Player()
+    mom_player.playername = manOfMatch
+    mom_player.runs = int(mom_runs)
+    mom_player.wickets = int(mom_wickets)
+
+    season_stat.player = mom_player.toJSON()
+
+    return season_stat.toJSON()
+
+
 def get_winner_count(winner_team):
     return season_group_by.tail(1).loc[:, ['season', 'winner']].groupby('winner').count().loc[winner_team, 'season']
 
@@ -38,6 +77,11 @@ def get_batsman_runs(batsman, season):
     return deliveries_season_group.get_group(season).groupby('batsman').get_group(batsman)['batsman_runs'].sum()
 
 
+def get_batsman_runs_match(batsman, season, match):
+    return deliveries_season_group.get_group(season).groupby('match_id').get_group(match).groupby('batsman').\
+        get_group(batsman)['batsman_runs'].sum()
+
+
 def get_bowler_wickets(bowler, season):
     try:
         bowler_wickets = deliveries_season_group.get_group(season).groupby('bowler').\
@@ -46,6 +90,14 @@ def get_bowler_wickets(bowler, season):
     except:
         return 0
 
+def get_bowler_wickets_match(bowler,season, match):
+    try:
+
+        bowler_wickets = deliveries_season_group.get_group(season).groupby('match_id').get_group(match).groupby('bowler').\
+            get_group(bowler)['dismissal_kind'].count()
+        return bowler_wickets
+    except:
+        return 0
 
 def get_bowler_wickets_overall(bowler):
     return deliveries.groupby(['bowler']).get_group(bowler)['dismissal_kind'].count()
@@ -75,7 +127,13 @@ def orange_cap(season):
         agg(np.sum).sort_values(by='batsman_runs').tail(1)['batsman_runs'].index[0]
     player_runs = deliveries_season_group.get_group(season).groupby('batsman').\
         agg(np.sum).sort_values(by='batsman_runs').tail(1)['batsman_runs'].iloc[0]
-    return player, player_runs
+
+    orange_cap_player = Player()
+    orange_cap_player.playername = player
+    orange_cap_player.runs = player_runs
+    orange_cap_player.season = season
+
+    return orange_cap_player.toJSON()
 
 
 def purple_cap(season):
@@ -83,7 +141,13 @@ def purple_cap(season):
         .count().sort_values().tail(1).index[0]
     player_wickets = deliveries_season_group.get_group(season).groupby('bowler')['dismissal_kind']\
         .count().sort_values().tail(1).iloc[0]
-    return player, player_wickets
+    purple_cap_player = Player()
+    purple_cap_player.playername = player
+    purple_cap_player.wickets = player_wickets
+    purple_cap_player.season = season
+
+    return purple_cap_player.toJSON()
+    # return player, player_wickets
 
 
 def between_team_stats(team1, team2):
@@ -119,75 +183,3 @@ def team_stats(stat_team, season, is_chasing):
 
     return total_matches, winning_matches, winning_chasing_matches
 
-
-# batsman2017 = deliveries.groupby(['season']).get_group(2017).groupby('batsman')
-# bowler2017 = deliveries.groupby(['season']).get_group(2017).groupby('bowler')
-#
-# batsmanRuns = batsman2017.get_group('V Kohli')['batsman_runs'].sum()
-# overallRuns = deliveries.groupby('batsman').get_group('V Kohli')['batsman_runs'].sum()
-# batsmanMatches = batsman2017.get_group('V Kohli')['match_id'].unique().size
-# bowlerWickets = bowler2017.get_group('YS Chahal')['dismissal_kind'].count()
-# overallwickets = deliveries.groupby('bowler').get_group('YS  Chahal')['dismissal_kind'].count()
-# totalMatches = deliveries.groupby('batsman').get_group('V Kohli')['match_id'].unique().size
-
-# # Winner of each season
-# for season, seasonDF in seasonGroupBy:
-#     print("Winner of season %s is %s" %(season, getWinner(seasonGroupBy, season)))
-
-# # How many times each team won IPL
-# team = 'Chennai Super Kings'
-# print("%s won IPL %s times" % (team, get_winner_count(team)))
-
-
-# # Result of 2 teams across all seasons
-# teams = matches['team1'].unique()
-#
-# for stat_team in teams:
-#     # print(team)
-#     team_matches_condition = ((matches['team1'] == stat_team) | (matches['team2'] == stat_team))
-#     total_matches = matches[team_matches_condition].loc[:, ['team1']].count().loc['team1']
-#
-#     winner_condition = ((matches['team1'] == stat_team) | (matches['team2'] == stat_team)) & \
-#                        (matches['winner'] == stat_team)
-#     winning_matches = matches[winner_condition].loc[:, ['winner']].count().loc['winner']
-#     print()
-#     print("%s won %s matches out of %s matches in IPL" % (stat_team, winning_matches, total_matches))
-
-
-# def chasing(match):
-#     winner = match['winner']
-#     toss_winner = match['toss_winner']
-#     toss_decision = match['toss_decision']
-#     chasing = None
-#     if winner is not None:
-#         if winner == toss_winner:
-#             if toss_decision == 'field':
-#                 chasing = winner
-#             else:
-#                 chasing = toss_winner
-#         else:
-#             if toss_decision == 'field':
-#                 chasing = toss_winner
-#             else:
-#                 chasing = winner
-#
-#     return chasing
-#
-#
-#
-# matches['chasing'] = matches.apply(chasing, axis=1)
-
-# print(matches.head(0))
-# seasonList = []
-# deliveriesId = deliveries['match_id']
-# matchesId = matches[['id','season']]
-# counter = 0
-# for matchId in deliveriesId:
-#     counter +=1
-#     seasonList.append(matchesId.loc[matchesId['id'] == matchId, 'season'].iloc[0])
-#     if counter % 10000 == 0:
-#         print(counter)
-#
-# print(seasonList)
-# deliveries['season'] = seasonList
-# deliveries.to_csv('deliveries_season.csv')
