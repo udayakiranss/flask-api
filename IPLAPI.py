@@ -3,6 +3,7 @@ from flask import json
 from IPLDataReader import get_winner, \
     get_batsman_runs, get_bowler_wickets, get_matches_season, team_stats, \
     get_batsman_runs_overall, get_bowler_wickets_overall, get_matches, get_abandoned_matches, orange_cap, purple_cap
+from IPLDataReader import get_loser, get_season_stats
 from IPLData import Player
 
 app = Flask(__name__)
@@ -23,6 +24,22 @@ def welcome_message():
 @app.route('/iplstats/winner/<int:season>')
 def ipl_winner(season):
     return "Winner of season %s is %s" % (str(season), get_winner(season)['winner'])
+
+
+@app.route('/iplstats/loser/<int:season>')
+def ipl_loser(season):
+    match_details = get_loser(season)
+    winner = match_details['winner']
+    if winner == match_details['team1']:
+        loser = match_details['team2']
+    else:
+        loser = match_details['team1']
+    return "Loser of season %s is %s" % (str(season), loser)
+
+@app.route('/iplstats/season/<int:season>')
+def ipl_seasonstat(season):
+    seasonstr = get_season_stats(season)
+    return json.dumps(seasonstr)
 
 
 @app.route('/iplstats/team/<stat_team>')
@@ -78,14 +95,26 @@ def season_team_chasing_percent(season, stat_team, is_chasing):
 
 @app.route('/iplstats/season/<int:season>/orangecap')
 def orange_cap_player(season):
-    player, player_runs = orange_cap(season)
-    return "%s got orange cap in %s for scoring %s runs" % (player, season, player_runs)
+    orange_player = orange_cap(season)
+    js = json.dumps(orange_player)
+
+    resp = Response(js, status=200, mimetype='application/json')
+
+    return resp
+    # player, player_runs = orange_cap(season)
+    # return "%s got orange cap in %s for scoring %s runs" % (player, season, player_runs)
 
 
 @app.route('/iplstats/season/<int:season>/purplecap')
 def purple_cap_player(season):
-    player, player_wickets = purple_cap(season)
-    return "%s got purple cap in %s for getting %s wickets" % (player, season, player_wickets)
+    purple_player = purple_cap(season)
+    js = json.dumps(purple_player)
+
+    resp = Response(js, status=200, mimetype='application/json')
+
+    return resp
+    # player, player_wickets = purple_cap(season)
+    # return "%s got purple cap in %s for getting %s wickets" % (player, season, player_wickets)
 
 
 @app.route('/iplstats/player/<player>')
