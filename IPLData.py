@@ -16,3 +16,40 @@ class Match:
             'teamB':self.teamB
         }
 
+
+class Player:
+
+    def _init_(self):
+        pass
+
+    def toJSON(self):
+        return {
+            'name': self.playername,
+            'noOfMatches': self.noOfMatches,
+            'totalRuns': int(self.runs),
+            'totalWickets': int(self.wickets)
+        }
+
+
+class SeasonStatistics:
+
+    def _init_(self):
+        pass
+
+    def toJSON(self):
+        return {
+            'season': self.playername,
+            'winner': self.noOfMatches,
+            'playerOfMatch': int(self.runs),
+            'loser': int(self.wickets),
+            'runs': self.runs,
+            'wickets': self.wickets,
+            'PlayerInningsDTO': {
+                'totalRuns': 1,
+                'totalWickets': 2
+            }
+        }
+
+
+
+

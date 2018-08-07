@@ -1,8 +1,9 @@
-from flask import Flask
+from flask import Flask, Response
 from flask import json
 from IPLDataReader import get_winner, \
     get_batsman_runs, get_bowler_wickets, get_matches_season, team_stats, \
     get_batsman_runs_overall, get_bowler_wickets_overall, get_matches, get_abandoned_matches, orange_cap, purple_cap
+from IPLData import Player
 
 app = Flask(__name__)
 
@@ -43,9 +44,22 @@ def player_stats_season(season, player):
     batsman_runs = get_batsman_runs(player, season)
     bowler_wickets = get_bowler_wickets(player, season)
     player_matches = get_matches_season(player, season)
-    return "%s scored %s runs and taken %s wickets in %s matches of season %s" % (player, batsman_runs,
-                                                                                  bowler_wickets, player_matches,
-                                                                                  season)
+
+    player_obj = Player()
+    player_obj.runs = batsman_runs
+    player_obj.wickets = bowler_wickets
+    player_obj.noOfMatches = player_matches
+    player_obj.playername = player
+    player_obj.season= season
+
+    js = json.dumps(player_obj.toJSON())
+
+    resp = Response(js, status=200, mimetype='application/json')
+
+    return resp
+    # return "%s scored %s runs and taken %s wickets in %s matches of season %s" % (player, batsman_runs,
+    #                                                                               bowler_wickets, player_matches,
+    #                                                                               season)
 
 
 @app.route('/iplstats/season/<int:season>/team/<stat_team>/<is_chasing>')
@@ -79,8 +93,21 @@ def player_stats(player):
     batsman_runs = get_batsman_runs_overall(player)
     bowler_wickets = get_bowler_wickets_overall(player)
     player_matches = get_matches(player)
-    return "%s scored %s runs and taken %s wickets in %s matches of IPL" % (player, batsman_runs,
-                                                                            bowler_wickets, player_matches)
+
+    player_obj = Player()
+    player_obj.runs = batsman_runs
+    player_obj.wickets = bowler_wickets
+    player_obj.noOfMatches = player_matches
+    player_obj.playername = player
+
+    js = json.dumps(player_obj.toJSON())
+
+    resp = Response(js, status=200, mimetype='application/json')
+
+    return resp
+
+    # return "%s scored %s runs and taken %s wickets in %s matches of IPL" % (player, batsman_runs,
+    #                                                                         bowler_wickets, player_matches)
 
 
 @app.route('/iplstats/abandoned')

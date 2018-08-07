@@ -110,11 +110,7 @@ def team_stats(stat_team, season, is_chasing):
         winner_chasing_condition = winner_condition & (shortlisted_matches['chasing'] == stat_team)
         winning_chasing_matches = shortlisted_matches[winner_chasing_condition].loc[:, ['winner']].count().loc['winner']
 
-
-
     winning_matches = shortlisted_matches[winner_condition].loc[:, ['winner']].count().loc['winner']
-
-
 
     # print()
     print("%s won %s matches out of %s matches in IPL" % (stat_team, winning_matches, total_matches))
