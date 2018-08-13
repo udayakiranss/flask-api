@@ -2,9 +2,9 @@ from flask import Flask, Response
 from flask import json
 from IPLDataReader import get_winner, \
     get_batsman_runs, get_bowler_wickets, get_matches_season, team_stats, \
-    get_batsman_runs_overall, get_bowler_wickets_overall, get_matches, get_abandoned_matches, orange_cap, purple_cap
+    get_batsman_runs_overall, get_bowler_wickets_overall, get_matches, get_abandoned_matches, orange_cap, purple_cap, season_teams
 from IPLDataReader import get_loser, get_season_stats
-from IPLData import Player
+from IPLData import Player, SeasonTeamPointsDTO
 
 app = Flask(__name__)
 
@@ -36,11 +36,15 @@ def ipl_loser(season):
         loser = match_details['team1']
     return "Loser of season %s is %s" % (str(season), loser)
 
+
 @app.route('/iplstats/season/<int:season>')
 def ipl_seasonstat(season):
     seasonstr = get_season_stats(season)
+    # st = season_teams(season)
     js = json.dumps(seasonstr)
+
     resp = Response(js, status=200, mimetype='application/json')
+
     return resp
 
 
@@ -51,11 +55,11 @@ def team_statistics(stat_team):
            % (stat_team, winning_matches, total_matches)
 
 
-@app.route('/iplstats/season/<season>/team/<stat_team>')
-def season_team_statistics(stat_team, season):
-    total_matches, winning_matches, chasing_matches = team_stats(stat_team, season, True)
-    return "%s won %s matches out of %s matches in IPL" \
-           % (stat_team, winning_matches, total_matches)
+# @app.route('/iplstats/season/<season>/team/<stat_team>')
+# def season_team_statistics(stat_team, season):
+#     total_matches, winning_matches, chasing_matches = team_stats(stat_team, season, True)
+#     return "%s won %s matches out of %s matches in IPL" \
+#            % (stat_team, winning_matches, total_matches)
 
 
 @app.route('/iplstats/season/<int:season>/player/<player>')
@@ -83,16 +87,26 @@ def player_stats_season(season, player):
 
 @app.route('/iplstats/season/<int:season>/team/<stat_team>/<is_chasing>')
 def season_team_chasing_percent(season, stat_team, is_chasing):
-    total_matches, winning_matches, chasing_winning = team_stats(stat_team, season, is_chasing)
+    season_team_stats  = team_stats(stat_team, season, is_chasing)
 
     if is_chasing == True:
-        winning_percentage = (chasing_winning * 100) / total_matches
+        winning_percentage = (season_team_stats.winning_chasing_matches * 100) / season_team_stats.totalMatchesPlayed
         return "%s's winning percentage while chasing is %s" \
                % (stat_team, winning_percentage)
     else:
-        winning_percentage = ((total_matches - chasing_winning) * 100) / total_matches
+        winning_percentage = ((season_team_stats.totalMatchesPlayed - season_team_stats.winning_chasing_matches) * 100) / season_team_stats.totalMatchesPlayed
         return "%s's winning percentage while defending is %s" \
                % (stat_team, winning_percentage)
+
+
+@app.route('/iplstats/season/<int:season>/team/<stat_team>')
+def season_team_statistics(season, stat_team):
+    season_team_stats  = team_stats(stat_team, season,None)
+    print(season_team_stats.totalMatchesPlayed)
+    js = json.dumps(season_team_stats.toJSON())
+
+    resp = Response(js, status=200, mimetype='application/json')
+    return resp
 
 
 @app.route('/iplstats/season/<int:season>/orangecap')
@@ -101,7 +115,6 @@ def orange_cap_player(season):
     js = json.dumps(orange_player)
 
     resp = Response(js, status=200, mimetype='application/json')
-
     return resp
     # player, player_runs = orange_cap(season)
     # return "%s got orange cap in %s for scoring %s runs" % (player, season, player_runs)
@@ -113,7 +126,6 @@ def purple_cap_player(season):
     js = json.dumps(purple_player)
 
     resp = Response(js, status=200, mimetype='application/json')
-
     return resp
     # player, player_wickets = purple_cap(season)
     # return "%s got purple cap in %s for getting %s wickets" % (player, season, player_wickets)
