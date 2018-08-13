@@ -3,7 +3,7 @@ from flask import json
 from IPLDataReader import get_winner, \
     get_batsman_runs, get_bowler_wickets, get_matches_season, team_stats, \
     get_batsman_runs_overall, get_bowler_wickets_overall, get_matches, get_abandoned_matches, orange_cap, purple_cap, season_teams
-from IPLDataReader import get_loser, get_season_stats
+from IPLDataReader import get_loser, get_season_stats, get_batsman_like
 from IPLData import Player, SeasonTeamPointsDTO
 
 app = Flask(__name__)
@@ -64,15 +64,17 @@ def team_statistics(stat_team):
 
 @app.route('/iplstats/season/<int:season>/player/<player>')
 def player_stats_season(season, player):
-    batsman_runs = get_batsman_runs(player, season)
-    bowler_wickets = get_bowler_wickets(player, season)
-    player_matches = get_matches_season(player, season)
+    player_exact = get_batsman_like(player)
+
+    batsman_runs = get_batsman_runs(player_exact, season)
+    bowler_wickets = get_bowler_wickets(player_exact, season)
+    player_matches = get_matches_season(player_exact, season)
 
     player_obj = Player()
     player_obj.runs = batsman_runs
     player_obj.wickets = bowler_wickets
     player_obj.noOfMatches = player_matches
-    player_obj.playername = player
+    player_obj.playername = player_exact
     player_obj.season= season
 
     js = json.dumps(player_obj.toJSON())
@@ -133,15 +135,16 @@ def purple_cap_player(season):
 
 @app.route('/iplstats/player/<player>')
 def player_stats(player):
-    batsman_runs = get_batsman_runs_overall(player)
-    bowler_wickets = get_bowler_wickets_overall(player)
-    player_matches = get_matches(player)
+    player_exact = get_batsman_like(player)
+    batsman_runs = get_batsman_runs_overall(player_exact)
+    bowler_wickets = get_bowler_wickets_overall(player_exact)
+    player_matches = get_matches(player_exact)
 
     player_obj = Player()
     player_obj.runs = batsman_runs
     player_obj.wickets = bowler_wickets
     player_obj.noOfMatches = player_matches
-    player_obj.playername = player
+    player_obj.playername = player_exact
 
     js = json.dumps(player_obj.toJSON())
 

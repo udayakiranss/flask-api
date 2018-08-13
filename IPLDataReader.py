@@ -71,6 +71,16 @@ def get_winner_count(winner_team):
     return season_group_by.tail(1).loc[:, ['season', 'winner']].groupby('winner').count().loc[winner_team, 'season']
 
 
+def get_batsman_like(batsman):
+    batsman_list = deliveries[deliveries['batsman'].str.contains(batsman)]['batsman'].unique()
+    print("Batsman list:", batsman_list)
+    if batsman_list.size > 0:
+        batsman_exact = batsman_list[0]
+        return batsman_exact
+    else:
+        return None
+
+
 def get_batsman_runs_overall(batsman):
     return deliveries.groupby(['batsman']).get_group(batsman)['batsman_runs'].sum()
 
@@ -92,6 +102,7 @@ def get_bowler_wickets(bowler, season):
     except:
         return 0
 
+
 def get_bowler_wickets_match(bowler,season, match):
     try:
 
@@ -101,8 +112,13 @@ def get_bowler_wickets_match(bowler,season, match):
     except:
         return 0
 
+
 def get_bowler_wickets_overall(bowler):
-    return deliveries.groupby(['bowler']).get_group(bowler)['dismissal_kind'].count()
+    try:
+        bowler_wickets = deliveries.groupby(['bowler']).get_group(bowler)['dismissal_kind'].count()
+        return bowler_wickets
+    except:
+        return 0
 
 
 def get_matches_season(batsman, season):
