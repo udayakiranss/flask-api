@@ -37,6 +37,30 @@ class Player:
         }
 
 
+class SeasonTeamPointsDTO:
+    teamName = ''
+    totalMatchesPlayed = 0
+    wonMatches = 0
+    lostMatches = 0
+    noResultMatches = 0
+    points = 0
+    winning_chasing_matches = 0
+
+    def _init_(self):
+        pass
+
+    def toJSON(self):
+        return {
+            'teamName': self.teamName,
+            'totalMatchesPlayed': int(self.totalMatchesPlayed),
+            'wonMatches': int(self.wonMatches),
+            'lostMatches': int(self.lostMatches),
+            'noResultMatches': int(self.noResultMatches),
+            'points': int(self.points),
+            'winningChasingMatches': int(self.winning_chasing_matches)
+        }
+
+
 class SeasonStatistics:
     season = 0
     winner = ''
@@ -44,6 +68,7 @@ class SeasonStatistics:
     by_runs = 0
     by_wickets = 0
     player = None
+    season_team_points_set = None
 
     def _init_(self):
         pass
@@ -56,8 +81,6 @@ class SeasonStatistics:
             'loser': self.loser,
             'runs': self.by_runs,
             'wickets': self.by_wickets,
-            'PlayerInningsDTO' : self.player
+            'PlayerInningsDTO' : self.player,
+            'SeasonTeamPointsDTO':self.season_team_points_set
         }
-
-
-
