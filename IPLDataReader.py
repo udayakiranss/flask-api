@@ -1,7 +1,7 @@
 import pandas as pd
 import os as os
 import numpy as np
-from IPLData import Match, SeasonStatistics, Player
+from IPLData import Match, SeasonStatistics, Player, SeasonTeamPointsDTO
 
 # colNames = ['id', 'season', 'city', 'date', 'team1', 'team2', 'toss_winner', 'toss_decision', 'result', 'dl_applied',
 #             'winner',
@@ -61,6 +61,8 @@ def get_season_stats(season):
     mom_player.wickets = int(mom_wickets)
 
     season_stat.player = mom_player.toJSON()
+
+    season_stat.season_team_points_set = season_teams(season)
 
     return season_stat.toJSON()
 
@@ -158,7 +160,7 @@ def between_team_stats(team1, team2):
 
 
 def team_stats(stat_team, season, is_chasing):
-    winning_chasing_matches = None
+    winning_chasing_matches = 0
     if season is not None:
         shortlisted_matches = season_group_by.get_group(int(season))
     else:
@@ -176,10 +178,36 @@ def team_stats(stat_team, season, is_chasing):
 
     winning_matches = shortlisted_matches[winner_condition].loc[:, ['winner']].count().loc['winner']
 
+    points = winning_matches * 2
+
     # print()
     print("%s won %s matches out of %s matches in IPL" % (stat_team, winning_matches, total_matches))
     if is_chasing:
         print(" while chasing")
 
-    return total_matches, winning_matches, winning_chasing_matches
+    lostMatches = total_matches - winning_matches
+    noResultMatches = 0
 
+
+    team_season_points =  SeasonTeamPointsDTO()
+    team_season_points.teamName = stat_team
+    team_season_points.totalMatchesPlayed = total_matches
+    team_season_points.wonMatches = winning_matches
+    team_season_points.points = points
+    team_season_points.lostMatches = lostMatches
+    team_season_points.winning_chasing_matches = winning_chasing_matches
+    team_season_points.noResultMatches = noResultMatches
+
+    return team_season_points
+
+
+def season_teams(season):
+    shortlisted_matches = season_group_by.get_group(int(season))
+    team_list = shortlisted_matches['team1'].unique().tolist()
+    season_team_stat_list = []
+    for team in team_list:
+        print(team)
+        season_team_stat = team_stats(team,season,None)
+        season_team_stat_list.append(season_team_stat.toJSON())
+
+    return season_team_stat_list
