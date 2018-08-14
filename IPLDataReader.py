@@ -82,16 +82,28 @@ def get_batsman_like(batsman):
 
 
 def get_batsman_runs_overall(batsman):
-    return deliveries.groupby(['batsman']).get_group(batsman)['batsman_runs'].sum()
+    try:
+        runs = deliveries.groupby(['batsman']).get_group(batsman)['batsman_runs'].sum()
+        return runs
+    except:
+        return 0
 
 
 def get_batsman_runs(batsman, season):
-    return deliveries_season_group.get_group(season).groupby('batsman').get_group(batsman)['batsman_runs'].sum()
+    try:
+        runs = deliveries_season_group.get_group(season).groupby('batsman').get_group(batsman)['batsman_runs'].sum()
+        return runs
+    except:
+        return 0
 
 
 def get_batsman_runs_match(batsman, season, match):
-    return deliveries_season_group.get_group(season).groupby('match_id').get_group(match).groupby('batsman').\
-        get_group(batsman)['batsman_runs'].sum()
+    try:
+        runs = deliveries_season_group.get_group(season).groupby('match_id').get_group(match).groupby('batsman'). \
+            get_group(batsman)['batsman_runs'].sum()
+        return runs
+    except:
+        return 0
 
 
 def get_bowler_wickets(bowler, season):
@@ -121,12 +133,38 @@ def get_bowler_wickets_overall(bowler):
         return 0
 
 
-def get_matches_season(batsman, season):
-    return deliveries_season_group.get_group(season).groupby('batsman').get_group(batsman)['match_id'].unique().size
+def get_matches(season, batsman):
+    try:
+        batsman_matches = get_matches_type(season, batsman, 'batsman')
+        fielder_matches = get_matches_type(season, batsman, 'fielder')
+        bowler_matches = get_matches_type(season, batsman, 'bowler')
+        matches = np.concatenate((batsman_matches, fielder_matches), axis=0)
+        matches = np.concatenate((matches, bowler_matches), axis=0)
+
+        # print('Total Matches:', matches)
+        return len(np.unique(matches))
+    except:
+        return 0
 
 
-def get_matches(batsman):
-    return deliveries.groupby('batsman').get_group(batsman)['match_id'].unique().size
+def get_matches_type(season, batsman, type):
+    if season is not None:
+        deliveries_list = deliveries_season_group.get_group(season)
+    else:
+        deliveries_list = deliveries
+    try:
+        if type == 'batsman':
+            matches = deliveries_list.groupby('batsman').get_group(batsman)['match_id'].unique()
+        if type == 'fielder':
+            matches = deliveries_list.groupby('fielder').get_group(batsman)['match_id'].unique()
+        if type == 'bowler':
+            matches = deliveries_list.groupby('bowler').get_group(batsman)['match_id'].unique()
+        # print(type, matches)
+        # print("Size:", len(matches))
+        return matches
+    except Exception as error:
+        print(error)
+        return np.array([])
 
 
 def get_abandoned_matches():
@@ -204,8 +242,7 @@ def team_stats(stat_team, season, is_chasing):
     lostMatches = total_matches - winning_matches
     noResultMatches = 0
 
-
-    team_season_points =  SeasonTeamPointsDTO()
+    team_season_points = SeasonTeamPointsDTO()
     team_season_points.teamName = stat_team
     team_season_points.totalMatchesPlayed = total_matches
     team_season_points.wonMatches = winning_matches
@@ -223,7 +260,7 @@ def season_teams(season):
     season_team_stat_list = []
     for team in team_list:
         print(team)
-        season_team_stat = team_stats(team,season,None)
+        season_team_stat = team_stats(team, season, None)
         season_team_stat_list.append(season_team_stat.toJSON())
 
     return season_team_stat_list
