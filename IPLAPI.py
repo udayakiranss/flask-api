@@ -50,16 +50,11 @@ def ipl_seasonstat(season):
 
 @app.route('/iplstats/team/<stat_team>')
 def team_statistics(stat_team):
-    total_matches, winning_matches, chasing_matches = team_stats(stat_team, None, None)
-    return "%s won %s matches out of %s matches in IPL" \
-           % (stat_team, winning_matches, total_matches)
-
-
-# @app.route('/iplstats/season/<season>/team/<stat_team>')
-# def season_team_statistics(stat_team, season):
-#     total_matches, winning_matches, chasing_matches = team_stats(stat_team, season, True)
-#     return "%s won %s matches out of %s matches in IPL" \
-#            % (stat_team, winning_matches, total_matches)
+    season_points = team_stats(stat_team, None, None)
+    print(season_points.totalMatchesPlayed)
+    total_matches = season_points.totalMatchesPlayed
+    winning_matches = season_points.wonMatches
+    return "%s won %s matches out of %s matches in IPL" % (stat_team, winning_matches, total_matches)
 
 
 @app.route('/iplstats/season/<int:season>/player/<player>')
@@ -166,4 +161,4 @@ def abandoned_matches():
 
 
 if __name__ == '__main__':
-    app.run(debug=1)
+    app.run(debug=1, host='0.0.0.0')
